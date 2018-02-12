@@ -3,7 +3,6 @@ install.packages("jsonlite")
 install.packages("dplyr")
 install.packages("tidyr")
 install.packages("ggplot2")
-install.packages("plyr")
 install.packages("stringr")
 
 library(httr)
@@ -11,7 +10,6 @@ library(jsonlite)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-library(plyr)
 library(stringr)
 
 setwd("~/../Desktop/Info_201/a5-api-Phi-HoPhan/projectkeys.gitignore")
@@ -19,32 +17,27 @@ source('keys.R')
 
 API_KEY <- google.key
 propub.key <- propublica.key
+base.url <- "https://www.googleapis.com/civicinfo/v2/"
+path <- "representatives/"
+google.api.request <- paste0(base.url, path)
+query.param <- list(address="5612B 15TH AVE NE SEATTLE WA 98105", key=API_KEY)
+response <- GET(google.api.request, query = query.param)
+body <- content(response, "text")
+result <- fromJSON(body)
+officials <- flatten(result$officials)
 
-get.google.api <- function(address){
-  base.url <- "https://www.googleapis.com/civicinfo/v2/"
-  path <- "representatives/"
-  google.api.request <- paste0(base.url, path)
-  query.param <- list(address=address, key=API_KEY)
-  response <- GET(google.api.request, query = query.param)
-  body <- content(response, "text")
-  result <- fromJSON(body)
-  officials <- flatten(result$officials)
-  return(officials)
-}
-get.table <- function(){
-  keyed.officials <- mutate(officials, key= c(row_number()-1))
-  keyed.officials$key <- as.numeric(keyed.officials$key)
-  
-  offices <- flatten(result$offices)
-  unlisted.offices <- unnest(offices, officialIndices)
-  
-  merged.office.officials <- full_join(keyed.officials, unlisted.offices, by=c("key" = "officialIndices"))
-  merged.office.officials.info <- 
-    select(merged.office.officials, name.y, name.x, party, emails, phones, photoUrl)
-  merged.office.officials.info[is.na(merged.office.officials.info)] <- "-"
-  merged.office.officials.info[merged.office.officials.info == "NULL"] <- "-"
-  return(merged.office.officials.info)
-}
+keyed.officials <- mutate(officials, key= c(row_number()-1))
+keyed.officials$key <- as.numeric(keyed.officials$key)
+
+offices <- flatten(result$offices)
+unlisted.offices <- unnest(offices, officialIndices)
+
+merged.office.officials <- full_join(keyed.officials, unlisted.offices, by=c("key" = "officialIndices"))
+merged.office.officials.info <- 
+  select(merged.office.officials, name.y, name.x, party, emails, phones, photoUrl)
+merged.office.officials.info[is.na(merged.office.officials.info)] <- "-"
+merged.office.officials.info[merged.office.officials.info == "NULL"] <- "-"
+
 
 
 ## 3. transform the data into a well formatted table
@@ -56,7 +49,7 @@ get.table <- function(){
 ##    page at
 ##    http://rmarkdown.rstudio.com/index.html
 ##    
-get.first.table <- function(){
+first.plot <- function(){
   base.url2 <- "https://api.propublica.org/congress/v1/"
   path2 <- "members/house/WA/current.json"
   propub.api.request <- paste0(base.url2, path2)
@@ -72,7 +65,7 @@ get.first.table <- function(){
           horiz = TRUE)
 }
 
-get.second.table <- function(){
+second.plot <- function(){
   base.url2 <- "https://api.propublica.org/congress/v1/"
   path2 <- "members/house/WA/current.json"
   propub.api.request <- paste0(base.url2, path2)
@@ -87,6 +80,7 @@ get.second.table <- function(){
           density = 50, main = "Gender Spread", xlab = "Number of representatives", horiz = TRUE)
 }
 
+base.url2 <- "https://api.propublica.org/congress/v1/"
 path3 <- "members/R000578.json"
 propub.member.request <- paste0(base.url2, path3)
 response3 <- GET(propub.member.request, add_headers("X-API-Key" = propub.key))

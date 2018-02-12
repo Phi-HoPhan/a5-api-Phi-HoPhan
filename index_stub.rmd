@@ -9,8 +9,7 @@ css: styles.css
 
 
 ```{r init, include=FALSE}
-setwd("~/../Desktop/Info_201/a5-api-Phi-HoPhan/projectkeys.gitignore")
-source('keys.R')
+source("~/../Desktop/Info_201/a5-api-Phi-HoPhan/projectkeys.gitignore/keys.R")
 API_KEY <- google.key
 propub.key <- propublica.key
 
@@ -25,17 +24,14 @@ address <- "5612B 15th Ave NE Seattle WA 98105"
 ## Make the main computations here.  Keep the functions in a separate file(s)
 ## and only include the final operations here.
 ## You have to 'source()' your main R file(s) here:
-setwd("~/../Desktop/Info_201/a5-api-Phi-HoPhan")
-source('process_data.R')
-get.google.api(address)
+source("~/../Desktop/Info_201/a5-api-Phi-HoPhan/process_data.R")
 ```
 
 ## Your Representatives
 
 This is a report about the political representatives for residents of Seattle, Washington. This report draws upon data from the ProPublica API and the Google Civic Data API. As an overview, here is a summary of who represents the address given (from the local to the national level).
 ```{r}
-get.table()
-knitr::kable(get.table)
+merged.office.officials.info
 ```
 
 ## House of Representatives
@@ -43,8 +39,8 @@ knitr::kable(get.table)
 Now let's take a look at all of the congressional representatives (in the House of Representatives, not the Senate) for Washington state where the address was given. We see this breakdown by gender and political party for those members of the House:
 
 ```{r}
-get.first.table()
-get.second.table()
+first.plot()
+second.plot()
 ```
 ## Dave Reichert
 
