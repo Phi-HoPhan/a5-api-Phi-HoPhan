@@ -5,63 +5,48 @@ output:
 css: styles.css
 ---
 
-This is the stub of the .rmd file you should use to create you
-representatives' overview.  Please fill in the missing part, write the
-code, and delete the instructions.
-
-
 # Your Elected Officials
 
 
 ```{r init, include=FALSE}
-## load API keys
-source("keys.R")
-## you may also load necessary libraries and set various options here
-library(dplyr)
+setwd("~/../Desktop/Info_201/a5-api-Phi-HoPhan/projectkeys.gitignore")
+source('keys.R')
+API_KEY <- google.key
+propub.key <- propublica.key
+
 knitr::opts_chunk$set(error=TRUE)
-                           # continue compiling on error
 ```
 
 ```{r address, include=FALSE}
-## insert your address here.  It does not to have quite complete.
-## Test your code with addresses in different states, see if it works
-address <- "San Francisco, CA"
+address <- "5612B 15th Ave NE Seattle WA 98105"
 ```
 
 ```{r processData}
 ## Make the main computations here.  Keep the functions in a separate file(s)
 ## and only include the final operations here.
 ## You have to 'source()' your main R file(s) here:
+setwd("~/../Desktop/Info_201/a5-api-Phi-HoPhan")
 source('process_data.R')
-## You may also have to do some additional processing here
+get.google.api(address)
 ```
 
 ## Your Representatives
 
-Explain briefly what and how do you do here.  Provide links to the
-corresponding API-s.
-
-Include a table that includes all the officials for the given addres.  
-
+This is a report about the political representatives for residents of Seattle, Washington. This report draws upon data from the ProPublica API and the Google Civic Data API. As an overview, here is a summary of who represents the address given (from the local to the national level).
 ```{r}
-## You may want to print the table in a nice way using `knitr::kable()`
-## when you have already created it.
-knitr::kable(repTable)
+get.table()
+knitr::kable(get.table)
 ```
 
 ## House of Representatives
 
-Make the visualization of party affiliation of the the congressional representatives
-(in the House of Representatives, _not_ the Senate) for this address.
+Now let's take a look at all of the congressional representatives (in the House of Representatives, not the Senate) for Washington state where the address was given. We see this breakdown by gender and political party for those members of the House:
 
 ```{r}
-##
-## ggplot(stateReps, aes(gender)) + ...
+get.first.table()
+get.second.table()
 ```
-
-Make another visualization too.
-
-## Pick a Particular Representative.  Insert the name here in the title
+## Dave Reichert
 
 Write a paragraph where you tell her name, party, age, and twitter
 link.  Find out how often she recently voted with the majority.

@@ -1,26 +1,51 @@
-### This file contains your main code.
-### Feel free to rename it, or split it into several files.
-###
-### Your final product should contain the code along the following lines:
+install.packages("httr")
+install.packages("jsonlite")
+install.packages("dplyr")
+install.packages("tidyr")
+install.packages("ggplot2")
+install.packages("plyr")
+install.packages("stringr")
 
-##    ---------- Google Civic Platform ----------
-## 1. create the google civic platform request and httr::GET() the result
-##    you need to include your api key in the request.  See the documentation
-##    https://developers.google.com/civic-information/
-##    in particular the reference section.
-##
-##    Note: you can submit the requests through your browser.  If unsure, or if
-##    httr::GET gives you an error, you may always put the address in your browser's
-##    address bar.  If correct, it will display the corresponding JSON data.  If
-##    incorrect, you get an error message.
+library(httr)
+library(jsonlite)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(plyr)
+library(stringr)
 
-## 2. extract the elected officials' data from the result
-##    The data contains many relevant variables, including normalized address,
-##    'offices' and 'officials'.  In order to attach the officials (people)
-##    with offices (jobs), I recommend to use dplyr joins (what would be the key?)
-##    More about joins in
-##    https://info201.github.io/dplyr.html#joins
-##    http://r4ds.had.co.nz/relational-data.html
+setwd("~/../Desktop/Info_201/a5-api-Phi-HoPhan/projectkeys.gitignore")
+source('keys.R')
+
+API_KEY <- google.key
+propub.key <- propublica.key
+
+get.google.api <- function(address){
+  base.url <- "https://www.googleapis.com/civicinfo/v2/"
+  path <- "representatives/"
+  google.api.request <- paste0(base.url, path)
+  query.param <- list(address=address, key=API_KEY)
+  response <- GET(google.api.request, query = query.param)
+  body <- content(response, "text")
+  result <- fromJSON(body)
+  officials <- flatten(result$officials)
+  return(officials)
+}
+get.table <- function(){
+  keyed.officials <- mutate(officials, key= c(row_number()-1))
+  keyed.officials$key <- as.numeric(keyed.officials$key)
+  
+  offices <- flatten(result$offices)
+  unlisted.offices <- unnest(offices, officialIndices)
+  
+  merged.office.officials <- full_join(keyed.officials, unlisted.offices, by=c("key" = "officialIndices"))
+  merged.office.officials.info <- 
+    select(merged.office.officials, name.y, name.x, party, emails, phones, photoUrl)
+  merged.office.officials.info[is.na(merged.office.officials.info)] <- "-"
+  merged.office.officials.info[merged.office.officials.info == "NULL"] <- "-"
+  return(merged.office.officials.info)
+}
+
 
 ## 3. transform the data into a well formatted table
 ##    I recommend you transform the data into markdown strings.  For instance,
@@ -31,42 +56,65 @@
 ##    page at
 ##    http://rmarkdown.rstudio.com/index.html
 ##    
+get.first.table <- function(){
+  base.url2 <- "https://api.propublica.org/congress/v1/"
+  path2 <- "members/house/WA/current.json"
+  propub.api.request <- paste0(base.url2, path2)
+  response2 <- GET(propub.api.request, add_headers("X-API-Key" = propub.key))
+  body2 <- content(response2, "text")
+  result2 <- fromJSON(body2)
+  representatives <- flatten(result2$results)
+  
+  party.spread <- count(representatives, party)
+  colors <- c("blue", "red")
+  barplot(party.spread$n, col = colors, names.arg = c("Democrats", "Republicans"), 
+          density = 50, main = "Party Affiliation", xlab = "Number of representatives", 
+          horiz = TRUE)
+}
 
-## -------------------- propublica --------------------
-## 4. Get state representatives from propublica congress API
-##    you need the respective API key.
-##
-##    Note1: the api key must be sent as 'X-API-Key'.  No other name, such as 'api-key'
-##    will work.
-##
-##    Note2: Propublica API has several endpoints.  The relevant one here is 'members'.
-##    It which allows you to get lists of members, lists of members by state,
-##    specific member by id, voting data, and more.
-##    
-##    Read the documentation:
-##    https://projects.propublica.org/api-docs/congress-api/members/
-##    
-##
-## 5. transform it in a form you can use for visualizations.
-## 
-##    For the first visualization you have to extract the party affiliation of all the members
-##    and make a histogram of that data.
-##    
-## 6. pick a representative.
-##
-##    Note: this representative must correspond to the state the address points to.  Different
-##    states have different number of representatives, I recommend to pick one of these at random. 
-##
-## 7. get this representative's info
-##
-##    Consult the 'members' endpoint and the examples related to information about a particular member.
-##
-## 8. get her recent votes.
-##
-##    In order to get the percentage of votes with majority, you have:
-##    a) get the member's voting data (see the same API documentation)
-##    b) pick the most recent votes (the data includes vote date)
-##    c) find her position (Yes/No)
-##    d) find the total votes (yes/no)
-##    Consult the example in the API documentation that includes the relevant JSON result.
-##
+get.second.table <- function(){
+  base.url2 <- "https://api.propublica.org/congress/v1/"
+  path2 <- "members/house/WA/current.json"
+  propub.api.request <- paste0(base.url2, path2)
+  response2 <- GET(propub.api.request, add_headers("X-API-Key" = propub.key))
+  body2 <- content(response2, "text")
+  result2 <- fromJSON(body2)
+  representatives <- flatten(result2$results)
+
+  gender.spread <- count(representatives, gender)
+  colors2 <- c("pink", "light blue")
+  barplot(gender.spread$n, col = colors2, names.arg = c("Female", "Male"),
+          density = 50, main = "Gender Spread", xlab = "Number of representatives", horiz = TRUE)
+}
+
+path3 <- "members/R000578.json"
+propub.member.request <- paste0(base.url2, path3)
+response3 <- GET(propub.member.request, add_headers("X-API-Key" = propub.key))
+body3 <- content(response3, "text")
+result3 <- fromJSON(body3)
+member <- flatten(result3$results)
+
+name <- paste(member$first_name, member$middle_name, member$last_name)
+birthday <- as.Date(member$date_of_birth[1])
+today <- as.Date(Sys.Date())
+days.old <- today-birthday
+years.old <- round(as.numeric(days.old)/365) - 1
+party <- if(toString(member$current_party[1]) == "D"){
+  "Democrat"
+  } else{
+    "Republican"
+  }
+twitter <- toString(member$twitter_account)
+
+path4 <- "house/votes/recent.json"
+propub.vote.request <- paste0(base.url2, path4)
+response4 <- GET(propub.vote.request, add_headers("X-API-Key" = propub.key))
+body4 <- content(response4, "text")
+result4 <- fromJSON(body4)
+votes <- flatten(result4$results$votes)
+
+path5 <- "members/R000578/explanations/115/votes.json"
+propub.member.vote.request <- paste0(base.url2, path5)
+response5 <- GET(propub.member.vote.request, add_headers("X-API-Key" = propub.key))
+body5 <- content(response5, "text")
+result5 <- fromJSON(body5)
